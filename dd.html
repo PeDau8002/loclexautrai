@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chất Bán Dẫn - Trọng Nguyên</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root { --blue: #00f2fe; --pink: #ff007f; --bg: #0a0c10; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 380px; padding: 40px; border-right: 1px solid rgba(255,255,255,0.1); background: rgba(15, 18, 25, 0.8); backdrop-filter: blur(15px); z-index: 10; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; }
+        .stat-val { color: var(--blue); font-family: monospace; }
+        #display-area { flex: 1; position: relative; }
+        #canvas-box { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+<div id="sidebar">
+    <h2 style="color: var(--blue);">VẬT LÝ BÁN DẪN</h2>
+    <p style="color: #555;">BÁO CÁO: TỔ 4</p>
+    <hr style="border: 0.5px solid #222; margin: 20px 0;">
+    <h3>Chất Bán Dẫn (P)</h3>
+    <div class="stat-row"><span>Vùng cấm (Eg):</span> <span class="stat-val">~ 1.12 eV</span></div>
+    <div class="stat-row"><span>Hạt tải chính:</span> <span class="stat-val" style="color:var(--pink)">Lỗ trống (h+)</span></div>
+    <p style="font-size: 0.85rem; color: #888; line-height: 1.6;">
+        Ở nhiệt độ phòng, electron nhận đủ năng lượng nhảy từ vùng hóa trị lên vùng dẫn, để lại các <b>lỗ trống</b> di chuyển như hạt mang điện dương.
+    </p>
+</div>
+<div id="display-area"><div id="canvas-box"></div></div>
+<script>
+    let scene, camera, renderer, crystal, ePart, hPart;
+    function init() {
+        const container = document.getElementById('canvas-box');
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
+        camera.position.set(8, 5, 12); camera.lookAt(0,0,0);
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+        crystal = new THREE.Mesh(new THREE.BoxGeometry(7, 4, 4, 5, 3, 3), new THREE.MeshBasicMaterial({ color: 0x222222, wireframe: true }));
+        scene.add(crystal);
+        ePart = createGroup(0x00f2fe, 100); hPart = createGroup(0xff007f, 100);
+        scene.add(ePart, hPart);
+        animate();
+    }
+    function createGroup(col, n) {
+        const g = new THREE.BufferGeometry(); const p = [];
+        for(let i=0; i<n; i++) p.push((Math.random()-0.5)*7, (Math.random()-0.5)*4, (Math.random()-0.5)*4);
+        g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+        return new THREE.Points(g, new THREE.PointsMaterial({ size: 0.15, color: col, blending: THREE.AdditiveBlending }));
+    }
+    function animate() {
+        requestAnimationFrame(animate);
+        const ePos = ePart.geometry.attributes.position; const hPos = hPart.geometry.attributes.position;
+        for(let i=0; i<ePos.count; i++) {
+            let ex = ePos.getX(i); ex += 0.03; if(ex > 3.5) ex = -3.5; ePos.setX(i, ex);
+            let hx = hPos.getX(i); hx -= 0.015; if(hx < -3.5) hx = 3.5; hPos.setX(i, hx);
+        }
+        ePos.needsUpdate = true; hPos.needsUpdate = true; crystal.rotation.y += 0.002; renderer.render(scene, camera);
+    }
+    init();
+</script>
+</body>
+</html>
